@@ -1,0 +1,17 @@
+{
+  "name": "SimpleMocks",
+  "version": "0.0.1",
+  "homepage": "https://github.com/antivanov",
+  "authors": [
+    "Anton Ivanov <anton.al.ivanov@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components"
+  ],
+  "devDependencies": {
+    "jasmine": "~2.0.0"
+  }
+}
