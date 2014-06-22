@@ -1,17 +1,26 @@
 (function(host) {
 
   function verifyMock(mock) {
-    if (mock.beingReplayed.filter(function(expectation) {
-        return !expectation.canBeOmitted();
-      }).length > 0) {
+    var remainingExpectations = mock.beingReplayed.filter(function(expectation) {
+      return !expectation.canBeOmitted();
+    });
+    if (remainingExpectations.length > 0) {
       host.SimpleMocks.Util.raiseMockError(mock, host.SimpleMocks.Util.unmetExpectationsMessage(mock));
     }
   }
 
   function replayMock(mock) {
-    mock.beingReplayed = mock.expectations.slice(0);
     mock.expectations.forEach(function(expectation) {
       expectation.reset();
+    });
+    mock.beingReplayed = mock.expectations.slice(0);
+  }
+
+  function performMockAction(action, args) {
+    var mocks = (args[0] instanceof Array) ? args[0] : args;
+
+    mocks.forEach(function(mock) {
+      action(mock);
     });
   }
 
@@ -23,21 +32,11 @@
   };
 
   SimpleMocks.replay = function() {
-    var args = [].slice.call(arguments, 0);
-    var mocks = (args[0] instanceof Array) ? args[0] : args;
-
-    mocks.forEach(function(mock) {
-      replayMock(mock);
-    });
+    performMockAction(replayMock, [].slice.call(arguments, 0));
   };
 
   SimpleMocks.verify = function() {
-    var args = [].slice.call(arguments, 0);
-    var mocks = (args[0] instanceof Array) ? args[0] : args;
-
-    mocks.forEach(function(mock) {
-      verifyMock(mock);
-    });
+    performMockAction(verifyMock, [].slice.call(arguments, 0));
   };
 
   host.SimpleMocks = SimpleMocks;

@@ -755,7 +755,7 @@ describe("SimpleMocks", function() {
     }
   });
 
-  //TODO: timesNoMoreThan
+  //TODO: timesNoMore
   //Test case: 'add(1, 2)' timesAtLeast(3), then 'add(3, 4)'
   //add(1, 2), add(1, 2), add(1, 2), add(1, 2), add(3, 4)
 
@@ -877,6 +877,9 @@ describe("SimpleMocks", function() {
 
   //TODO: Calling 'times' with no 'expect'
   //TODO: Calling 'with' with no 'expect'
+
+  //TODO: Not null matcher
+  //TODO: Not undefined matcher
 
   //TODO: none
   //TODO: once

@@ -38,7 +38,7 @@
     return this;
   };
 
-  Expectation.prototype.reset = function(times) {
+  Expectation.prototype.reset = function() {
     this.calledTimes = 0;
   };
 
@@ -61,6 +61,10 @@
 
     return reachedAtLeastLimit || didNotReachNoMoreThanLimit;
   };
+
+  Expectation.prototype.canBeOmitted = function() {
+    return (this.calledTimes <= this.times) && (this.timesQuantifier == TIMES.NO_MORE_THAN);
+  }
 
   Expectation.prototype.isExpectedMore = function() {
     return (this.calledTimes < this.times)
@@ -115,10 +119,6 @@
     return matched;
   };
 
-  Expectation.prototype.canBeOmitted = function() {
-    return (this.calledTimes <= this.times) && (this.timesQuantifier == TIMES.NO_MORE_THAN);
-  }
-
   function Expectations() {
     this.expectations = [];
     this.currentExpectation = null;
@@ -170,22 +170,6 @@
     return new host.SimpleMocks.Mock(this.expectations, name);
   };
 
-  Expectations.copy = function(expectations) {
-    return expectations.map(function(expectation) {
-      var expectationCopy = new Expectation();
-
-      expectationCopy.expectMethod(expectation.methodName)
-        .expectTimes(expectation.times, expectation.timesQuantifier);
-
-      if (expectation.args) {
-        expectationCopy.expectArguments(expectation.args)
-      }
-      //TODO: returnValue
-      //TODO: andThrows
-      return expectationCopy;
-    });
-  }
-
   Expectations.checkMethodCalled = function(mock, methodName, methodArgs) {
     var expectations = mock.beingReplayed;
 
@@ -217,5 +201,6 @@
     });
   }
 
+  host.SimpleMocks.Expectation = Expectation;
   host.SimpleMocks.Expectations = Expectations;
 })(this);

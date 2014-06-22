@@ -3,7 +3,7 @@
   function Mock(expectations, name) {
     var self = this;
 
-    this.expectations = host.SimpleMocks.Expectations.copy(expectations);
+    this.expectations = copy(expectations);
     this.name = name;
     this.beingReplayed = [];
 
@@ -13,6 +13,22 @@
       };
     });
     host.SimpleMocks.replay(this);
+  }
+
+  function copy(expectations) {
+    return expectations.map(function(expectation) {
+      var expectationCopy = new host.SimpleMocks.Expectation();
+
+      expectationCopy.expectMethod(expectation.methodName)
+        .expectTimes(expectation.times, expectation.timesQuantifier);
+
+      if (expectation.args) {
+        expectationCopy.expectArguments(expectation.args);
+      }
+      //TODO: returnValue
+      //TODO: andThrows
+      return expectationCopy;
+    });
   }
 
   host.SimpleMocks.Mock = Mock;
