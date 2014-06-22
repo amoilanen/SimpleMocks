@@ -124,6 +124,12 @@
     this.currentExpectation = null;
   }
 
+  function checkCurrentExpectation(self, whatToExpect) {
+    if (self.currentExpectation == null) {
+      throw new Error("No matching 'expect' found for last '" + whatToExpect + "'");
+    }
+  }
+
   Expectations.prototype.flush = function() {
     if (this.currentExpectation) {
       this.expectations.push(this.currentExpectation);
@@ -139,24 +145,25 @@
   };
 
   Expectations.prototype.times = function(times) {
+    checkCurrentExpectation(this, "times");
     this.currentExpectation.expectTimes(times, TIMES.EXACTLY);
     return this;
   };
 
   Expectations.prototype.timesAtLeast = function(times) {
+    checkCurrentExpectation(this, "timesAtLeast");
     this.currentExpectation.expectTimes(times, TIMES.AT_LEAST);
     return this;
   };
 
   Expectations.prototype.timesNoMoreThan = function(times) {
+    checkCurrentExpectation(this, "timesNoMoreThan");
     this.currentExpectation.expectTimes(times, TIMES.NO_MORE_THAN);
     return this;
   };
 
   Expectations.prototype.with = function() {
-    if (!this.currentExpectation) {
-      throw new Error("No matching 'expect' found for last 'with'");
-    }
+    checkCurrentExpectation(this, "with");
     this.currentExpectation.expectArguments([].slice.call(arguments, 0));
     return this;
   };

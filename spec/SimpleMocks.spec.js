@@ -487,29 +487,6 @@ describe("SimpleMocks", function() {
     mock.method(null);
   });
 
-  it("should allow to expect non-null as argument", function() {
-    var mock = expectations.expect("method")
-      .with(SimpleMocks.Matchers.NotNull)
-      .mock();
-
-    try {
-      mock.method(null);
-      throw new Error("Exception should be thrown when calling method with other arguments");
-    } catch (e) {
-      expect(e.message).toBe("Wrong arguments provided to 'method', expected ''not null'' but was 'null'. Unmet expectations: "
-        + "\nmethod 'method' with arguments ''not null''");
-    }
-    try {
-      mock.method((void 0));
-      throw new Error("Exception should be thrown when calling method with other arguments");
-    } catch (e) {
-      expect(e.message).toBe("Wrong arguments provided to 'method', expected ''not null'' but was 'undefined'. Unmet expectations: "
-        + "\nmethod 'method' with arguments ''not null''");
-    }
-
-    mock.method(5);
-  });
-
   it("should allow to specify a custom matcher", function() {
     function StartsWith(prefix) {
       this.prefix = prefix;
@@ -656,6 +633,30 @@ describe("SimpleMocks", function() {
     SimpleMocks.verify(mock);
   });
 
+  it("should throw exception when 'times' is called without matching 'expect'", function() {
+    try {
+      expectations.times(2);
+    } catch (e) {
+      expect(e.message).toBe("No matching 'expect' found for last 'times'");
+    }
+  });
+
+  it("should throw exception when 'timesAtLeast' is called without matching 'expect'", function() {
+    try {
+      expectations.timesAtLeast(2);
+    } catch (e) {
+      expect(e.message).toBe("No matching 'expect' found for last 'timesAtLeast'");
+    }
+  });
+
+  it("should throw exception when 'timesNoMoreThan' is called without matching 'expect'", function() {
+    try {
+      expectations.timesNoMoreThan(2);
+    } catch (e) {
+      expect(e.message).toBe("No matching 'expect' found for last 'timesNoMoreThan'");
+    }
+  });
+
   it("should allow to specify timesAtLeast and call more times than specified", function() {
     mock = expectations.expect("add").with(1, 2).timesAtLeast(3)
       .expect("add").with(3, 4)
@@ -755,136 +756,242 @@ describe("SimpleMocks", function() {
     }
   });
 
-  //TODO: timesNoMore
-  //Test case: 'add(1, 2)' timesAtLeast(3), then 'add(3, 4)'
-  //add(1, 2), add(1, 2), add(1, 2), add(1, 2), add(3, 4)
+  describe("timesNoMoreThan", function() {
 
-  //TODO: timesNoMore
-  //Test case: 'add(1, 2)' timesAtLeast(3), then 'add(3, 4)'
-  //add(1, 2), add(1, 2), add(1, 2), add(1, 2), add(4, 5)
+    it("should throw exception when limit is exceeded", function() {
+      mock = expectations.expect("add").with(1, 2).timesNoMoreThan(3)
+        .expect("add").with(3, 4)
+        .mock();
 
-  //TODO: timesNoMore
-  //Test case: 'add(1, 2)' timesAtLeast(3), then 'add(3, 4)'
-  //add(1, 2), add(1, 2), add(1, 2), add(4, 5)
-
-  //TODO: timesNoMore
-  //Test case: 'add(1, 2)' timesAtLeast(3), then 'add(3, 4)'
-  //add(1, 2), add(1, 2), add(1, 2), add(3, 4)
-
-  //TODO: timesNoMore
-  //Test case: 'add(1, 2)' timesAtLeast(3), then 'add(3, 4)'
-  //add(1, 2), add(1, 2), add(4, 5)
-
-  //TODO: timesNoMore
-  //Test case: 'add(1, 2)' timesAtLeast(3), then 'add(3, 4)'
-  //add(1, 2), add(1, 2), add(3, 4)
-
-  it("should throw exception if timesNoMoreThan and called more times than specified", function() {
-    mock = expectations.expect("add").with(1, 2).timesNoMoreThan(3)
-      .expect("add").with(3, 4)
-      .mock();
-
-    mock.add(1, 2);
-    mock.add(1, 2);
-    mock.add(1, 2);
-
-    try {
       mock.add(1, 2);
-      throw new Error("Exception should be thrown");
-    } catch (e) {
-      expect(e.message).toBe("Wrong arguments provided to 'add', expected '3,4' but was '1,2'. Unmet expectations: "
-        + "\nmethod 'add' with arguments '3,4'");
-    }
+      mock.add(1, 2);
+      mock.add(1, 2);
+
+      try {
+        mock.add(1, 2);
+        throw new Error("Exception should be thrown");
+      } catch (e) {
+        expect(e.message).toBe("Wrong arguments provided to 'add', expected '3,4' but was '1,2'. Unmet expectations: "
+          + "\nmethod 'add' with arguments '3,4'");
+      }
+    });
+
+    it("should throw exception when called exactly expected times and then unexpected method", function() {
+      mock = expectations.expect("add").with(1, 2).timesNoMoreThan(3)
+        .expect("add").with(3, 4)
+        .mock();
+
+      mock.add(1, 2);
+      mock.add(1, 2);
+      mock.add(1, 2);
+
+      try {
+        mock.add(4, 5);
+        throw new Error("Exception should be thrown");
+      } catch (e) {
+        expect(e.message).toBe("Wrong arguments provided to 'add', expected '3,4' but was '4,5'. Unmet expectations: "
+          + "\nmethod 'add' with arguments '3,4'");
+      }
+    });
+
+    it("should throw exception when called exactly expected times and then another expected method", function() {
+      mock = expectations.expect("add").with(1, 2).timesNoMoreThan(3)
+        .expect("add").with(3, 4)
+        .mock();
+
+      mock.add(1, 2);
+      mock.add(1, 2);
+      mock.add(1, 2);
+      mock.add(3, 4);
+    });
+
+    it("should throw exception when called fewer than expected times and then unexpected method", function() {
+      mock = expectations.expect("add").with(1, 2).timesNoMoreThan(3)
+        .expect("add").with(3, 4)
+        .mock();
+
+      mock.add(1, 2);
+      mock.add(1, 2);
+
+      try {
+        mock.add(4, 5);
+        throw new Error("Exception should be thrown");
+      } catch (e) {
+        expect(e.message).toBe("Wrong arguments provided to 'add', expected '3,4' but was '4,5'. Unmet expectations: "
+          + "\nmethod 'add' with arguments '3,4'");
+      }
+    });
+
+    it("should throw exception when called fewer than expected times and then another expected method", function() {
+      mock = expectations.expect("add").with(1, 2).timesNoMoreThan(3)
+        .expect("add").with(3, 4)
+        .mock();
+
+      mock.add(1, 2);
+      mock.add(1, 2);
+      mock.add(3, 4);
+    });
+
+
+    it("should allow to call fewer times", function() {
+      mock = expectations.expect("add").with(1, 2).timesNoMoreThan(3)
+        .mock();
+
+      mock.add(1, 2);
+      mock.add(1, 2);
+
+      SimpleMocks.verify(mock);
+    });
+
+    it("should allow to specify several in a row", function() {
+      mock = expectations.expect("add").with(1, 2).timesNoMoreThan(3)
+        .expect("subtract").with(3, 4).timesNoMoreThan(3)
+        .expect("mult").with(5, 6).timesNoMoreThan(3)
+        .mock();
+
+      mock.mult(5, 6);
+
+      SimpleMocks.verify(mock);
+    });
   });
 
-  it("should allow to specify timesNoMoreThan and call times as specified", function() {
-    mock = expectations.expect("add").with(1, 2).timesNoMoreThan(3)
-      .expect("add").with(3, 4)
-      .mock();
+  describe("Matchers", function() {
 
-    mock.add(1, 2);
-    mock.add(1, 2);
-    mock.add(1, 2);
-    mock.add(3, 4);
+    describe("Null", function() {
 
-    SimpleMocks.verify(mock);
+      it("should throw exception if non-null provided", function() {
+        var mock = expectations.expect("print").with(SimpleMocks.Matchers.Null)
+          .mock();
+
+        try {
+          mock.print("abc");
+          throw new Error("Exception should be thrown when calling method with other arguments");
+        } catch (e) {
+          expect(e.message).toBe("Wrong arguments provided to 'print', expected 'null' but was 'abc'. Unmet expectations: "
+            + "\nmethod 'print' with arguments 'null'");
+        }
+      });
+
+      it("should throw exception if 'undefined' provided", function() {
+        var mock = expectations.expect("print").with(SimpleMocks.Matchers.Null)
+          .mock();
+
+        try {
+          mock.print((void 0));
+          throw new Error("Exception should be thrown when calling method with other arguments");
+        } catch (e) {
+          expect(e.message).toBe("Wrong arguments provided to 'print', expected 'null' but was 'undefined'. Unmet expectations: "
+            + "\nmethod 'print' with arguments 'null'");
+        }
+      });
+
+      it("should work if 'null' provided", function() {
+        var mock = expectations.expect("print").with(SimpleMocks.Matchers.Null)
+          .mock();
+
+        mock.print(null);
+      });
+
+    });
+
+    describe("NonNull", function() {
+
+      it("should work if non-null provided", function() {
+        var mock = expectations.expect("print").with(SimpleMocks.Matchers.NonNull)
+          .mock();
+
+        mock.print("abc");
+      });
+
+      it("should work if 'undefined' provided", function() {
+        var mock = expectations.expect("print").with(SimpleMocks.Matchers.NonNull)
+          .mock();
+
+        mock.print((void 0));
+      });
+
+      it("should throw exception if 'null' provided", function() {
+        var mock = expectations.expect("print").with(SimpleMocks.Matchers.NonNull)
+          .mock();
+
+        try {
+          mock.print(null);
+          throw new Error("Exception should be thrown when calling method with other arguments");
+        } catch (e) {
+          expect(e.message).toBe("Wrong arguments provided to 'print', expected ''not null'' but was 'null'. Unmet expectations: "
+            + "\nmethod 'print' with arguments ''not null''");
+        }
+      });
+    });
+
+    describe("Undefined", function() {
+
+      it("should throw exception if non-undefined provided", function() {
+        var mock = expectations.expect("print").with(SimpleMocks.Matchers.Undefined)
+          .mock();
+
+        try {
+          mock.print("abc");
+          throw new Error("Exception should be thrown when calling method with other arguments");
+        } catch (e) {
+          expect(e.message).toBe("Wrong arguments provided to 'print', expected 'undefined' but was 'abc'. Unmet expectations: "
+            + "\nmethod 'print' with arguments 'undefined'");
+        }
+      });
+
+      it("should throw exception if 'null' provided", function() {
+        var mock = expectations.expect("print").with(SimpleMocks.Matchers.Undefined)
+          .mock();
+
+        try {
+          mock.print(null);
+          throw new Error("Exception should be thrown when calling method with other arguments");
+        } catch (e) {
+          expect(e.message).toBe("Wrong arguments provided to 'print', expected 'undefined' but was 'null'. Unmet expectations: "
+            + "\nmethod 'print' with arguments 'undefined'");
+        }
+      });
+
+      it("should work if 'undefined' provided", function() {
+        var mock = expectations.expect("print").with(SimpleMocks.Matchers.Undefined)
+          .mock();
+
+        mock.print((void 0));
+      });
+
+    });
+
+    describe("NonUndefined", function() {
+
+      it("should work if non-undefined provided", function() {
+        var mock = expectations.expect("print").with(SimpleMocks.Matchers.NonUndefined)
+          .mock();
+
+        mock.print("abc");
+      });
+
+      it("should work if 'null' provided", function() {
+        var mock = expectations.expect("print").with(SimpleMocks.Matchers.NonUndefined)
+          .mock();
+
+        mock.print(null);
+      });
+
+      it("should throw exception if 'undefined' provided", function() {
+        var mock = expectations.expect("print").with(SimpleMocks.Matchers.NonUndefined)
+          .mock();
+
+        try {
+          mock.print((void 0));
+          throw new Error("Exception should be thrown when calling method with other arguments");
+        } catch (e) {
+          expect(e.message).toBe("Wrong arguments provided to 'print', expected ''not undefined'' but was 'undefined'. Unmet expectations: "
+            + "\nmethod 'print' with arguments ''not undefined''");
+        }
+      });
+
+    });
   });
-
-  it("should allow to specify timesNoMoreThan and call times as specified, then unexpected method", function() {
-    mock = expectations.expect("add").with(1, 2).timesNoMoreThan(3)
-      .expect("add").with(3, 4)
-      .mock();
-
-    mock.add(1, 2);
-    mock.add(1, 2);
-    mock.add(1, 2);
-    try {
-      mock.add(4, 5);
-      throw new Error("Exception should be thrown");
-    } catch (e) {
-      expect(e.message).toBe("Wrong arguments provided to 'add', expected '3,4' but was '4,5'. Unmet expectations: "
-        + "\nmethod 'add' with arguments '3,4'");
-    }
-  });
-
-  it("should allow to specify timesNoMoreThan and call fewer times, then expected method", function() {
-    mock = expectations.expect("add").with(1, 2).timesNoMoreThan(3)
-      .expect("add").with(3, 4)
-      .mock();
-
-    mock.add(1, 2);
-    mock.add(1, 2);
-    mock.add(3, 4);
-  });
-
-  it("should allow to specify timesNoMoreThan and call fewer times", function() {
-    mock = expectations.expect("add").with(1, 2).timesNoMoreThan(3)
-      .mock();
-
-    mock.add(1, 2);
-    mock.add(1, 2);
-
-    SimpleMocks.verify(mock);
-  });
-
-  it("should allow to specify timesNoMoreThan and throw exception if called fewer times, then unexpected method", function() {
-    mock = expectations.expect("add").with(1, 2).timesNoMoreThan(3)
-      .expect("add").with(3, 4)
-      .mock();
-
-    mock.add(1, 2);
-    mock.add(1, 2);
-
-    try {
-      mock.add(4, 5);
-      throw new Error("Exception should be thrown");
-    } catch (e) {
-      expect(e.message).toBe("Wrong arguments provided to 'add', expected '3,4' but was '4,5'. Unmet expectations: "
-        + "\nmethod 'add' with arguments '3,4'");
-    }
-  });
-
-  it("should allow to specify several timesNoMoreThan in a row", function() {
-    mock = expectations.expect("add").with(1, 2).timesNoMoreThan(3)
-      .expect("subtract").with(3, 4).timesNoMoreThan(3)
-      .expect("mult").with(5, 6).timesNoMoreThan(3)
-      .mock();
-
-    mock.mult(5, 6);
-
-    SimpleMocks.verify(mock);
-  });
-
-  //TODO: Calling 'times' with no 'expect'
-  //TODO: Calling 'with' with no 'expect'
-
-  //TODO: Not null matcher
-  //TODO: Not undefined matcher
-
-  //TODO: none
-  //TODO: once
-
-  //Expect a number of calls: none, once, times(n), timesAtLeast(n), timesNoMoreThan(n)
 
   //TODO: Add support for stubbing methods
   //Stubbing some method when it is not important whether it will be called or not and with what arguments
@@ -893,6 +1000,9 @@ describe("SimpleMocks", function() {
 
   //TODO: andThrow
   //Expecting an exception to be thrown andThrow
+
+  //TODO: andCall
+  //Calling a specified function when method is called
 
   //TODO: specify a changing behavior for a method
   //expect(mock.voteForRemoval("Document"))

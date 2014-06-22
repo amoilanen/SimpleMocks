@@ -6,6 +6,7 @@
   function ValueMatcher(value) {
     this.value = value;
   }
+
   ValueMatcher.prototype = new Matcher();
 
   ValueMatcher.prototype.matches = function(value) {
@@ -24,6 +25,7 @@
   function TypeMatcher(type) {
     this.type = type;
   }
+
   TypeMatcher.prototype = new Matcher();
 
   TypeMatcher.prototype.matches = function(value) {
@@ -37,6 +39,7 @@
   function InstanceOfMatcher(type) {
     this.type = type;
   }
+
   InstanceOfMatcher.prototype = new Matcher();
 
   InstanceOfMatcher.prototype.matches = function(value) {
@@ -50,16 +53,18 @@
     return "'" + (match ? match[1].toLowerCase() : this.type) + "'";
   };
 
-  function NotNullMatcher() {
+  function NotMatcher(wrappedMatcher) {
+    this.wrappedMatcher = wrappedMatcher;
   }
-  NotNullMatcher.prototype = new Matcher();
 
-  NotNullMatcher.prototype.matches = function(value) {
-    return (value !== null) && (value !== undefined);
+  NotMatcher.prototype = new Matcher();
+
+  NotMatcher.prototype.matches = function(value) {
+    return !this.wrappedMatcher.matches(value);
   };
 
-  NotNullMatcher.prototype.toString = function() {
-    return "'not null'";
+  NotMatcher.prototype.toString = function() {
+    return "'not " + this.wrappedMatcher.toString() + "'";
   };
 
   host.SimpleMocks.Matchers = {
@@ -69,7 +74,10 @@
     Boolean: new TypeMatcher("boolean"),
     Function: new TypeMatcher("function"),
     Array: new InstanceOfMatcher(Array),
-    NotNull: new NotNullMatcher(),
+    Null: new ValueMatcher(null),
+    NonNull: new NotMatcher(new ValueMatcher(null)),
+    Undefined: new ValueMatcher(undefined),
+    NonUndefined: new NotMatcher(new ValueMatcher(undefined)),
     Matcher: Matcher,
     ValueMatcher: ValueMatcher
   };
