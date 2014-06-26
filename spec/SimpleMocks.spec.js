@@ -615,7 +615,7 @@ describe("SimpleMocks", function() {
       throw new Error("Exception should be thrown when called fewer than expected times");
     } catch (e) {
       expect(e.message).toBe("Unmet expectations: "
-        + "\nmethod 'add' with arguments '1,2', exactly 3 times, called 1 time(s)");
+        + "\nmethod 'add' with arguments '1,2', exactly 3 time(s), called 1 time(s)");
     }
   });
 
@@ -733,7 +733,7 @@ describe("SimpleMocks", function() {
       throw new Error("Exception should be thrown");
     } catch (e) {
       expect(e.message).toBe("Wrong arguments provided to 'add', expected '1,2' but was '3,4'. Unmet expectations: "
-        + "\nmethod 'add' with arguments '1,2', at least 3 times, called 2 time(s)"
+        + "\nmethod 'add' with arguments '1,2', at least 3 time(s), called 2 time(s)"
         + "\nmethod 'add' with arguments '3,4'");
     }
   });
@@ -751,7 +751,7 @@ describe("SimpleMocks", function() {
       throw new Error("Exception should be thrown");
     } catch (e) {
       expect(e.message).toBe("Wrong arguments provided to 'add', expected '1,2' but was '4,5'. Unmet expectations: "
-        + "\nmethod 'add' with arguments '1,2', at least 3 times, called 2 time(s)"
+        + "\nmethod 'add' with arguments '1,2', at least 3 time(s), called 2 time(s)"
         + "\nmethod 'add' with arguments '3,4'");
     }
   });
@@ -993,10 +993,74 @@ describe("SimpleMocks", function() {
     });
   });
 
-  //TODO: Add support for stubbing methods
-  //Stubbing some method when it is not important whether it will be called or not and with what arguments
+  describe("anyTimes", function() {
+    it("should allow not to call method at all", function() {
+      mock = expectations.expect("add").with(1, 2).anyTimes()
+        .expect("mult").with(3, 4)
+        .mock();
+
+      mock.mult(3, 4);
+    });
+
+    it("should allow to call method once", function() {
+      mock = expectations.expect("add").with(1, 2).anyTimes()
+        .expect("mult").with(3, 4)
+        .mock();
+
+      mock.add(1, 2);
+      mock.mult(3, 4);
+    });
+
+    it("should allow to call method several times", function() {
+      mock = expectations.expect("add").with(1, 2).anyTimes()
+        .expect("mult").with(3, 4)
+        .mock();
+
+      mock.add(1, 2);
+      mock.add(1, 2);
+      mock.add(1, 2);
+      mock.mult(3, 4);
+    });
+
+    it("should pass verification", function() {
+      mock = expectations.expect("add").with(1, 2).anyTimes()
+        .mock();
+
+      SimpleMocks.verify(mock);
+    });
+
+    it("should throw exception if immediately called with wrong arguments", function() {
+      mock = expectations.expect("add").with(1, 2).anyTimes()
+        .mock();
+
+      try {
+        mock.add(3, 4);
+        throw new Error("Exception should be thrown when calling method with other arguments");
+      } catch (e) {
+        expect(e.message).toBe("Wrong arguments provided to 'add', expected '1,2' but was '3,4'. Unmet expectations: "
+          + "\nmethod 'add' with arguments '1,2', any times, called 0 time(s)");
+      }
+    });
+
+    it("should throw exception if called with wrong arguments", function() {
+      mock = expectations.expect("add").with(1, 2).anyTimes()
+        .mock();
+
+      mock.add(1, 2);
+      mock.add(1, 2);
+      mock.add(1, 2);
+      try {
+        mock.add(3, 4);
+        throw new Error("Exception should be thrown when calling method with other arguments");
+      } catch (e) {
+        expect(e.message).toBe("Wrong arguments provided to 'add', expected '1,2' but was '3,4'. Unmet expectations: "
+          + "\nmethod 'add' with arguments '1,2', any times, called 3 time(s)");
+      }
+    });
+  });
 
   //TODO: Mocking and expecting that a method returns value 'andReturn'
+  //TODO: anyTimes expectation returns some value, but unexpected method immediately called, 'undefined'
 
   //TODO: andThrow
   //Expecting an exception to be thrown andThrow

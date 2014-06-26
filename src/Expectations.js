@@ -48,27 +48,33 @@
     if (this.argumentMatchers) {
       message = message + " with arguments '" + this.argumentMatchers + "'";
     }
-    if (this.times > 1) {
-      message = message + ", " + this.timesQuantifier + " "
-        + this.times + " times, called " + this.calledTimes + " time(s)";
+    if (this.times > 1 || (this.timesQuantifier == TIMES.AT_LEAST)) {
+      if (this.times >= 1) {
+        message = message + ", " + this.timesQuantifier + " "
+          + this.times + " time(s)";
+      } else {
+        message = message + ", any times";
+      }
+      message = message + ", called " + this.calledTimes + " time(s)"
     }
     return message;
   };
 
   Expectation.prototype.canSkipCheck = function() {
-    var reachedAtLeastLimit = (this.timesQuantifier == TIMES.AT_LEAST) && (this.calledTimes == this.times);
+    var reachedAtLeastLimit = (this.timesQuantifier == TIMES.AT_LEAST) && (this.calledTimes >= this.times);
     var didNotReachNoMoreThanLimit = (this.timesQuantifier == TIMES.NO_MORE_THAN) && (this.calledTimes < this.times);
 
     return reachedAtLeastLimit || didNotReachNoMoreThanLimit;
   };
 
   Expectation.prototype.canBeOmitted = function() {
-    return (this.calledTimes <= this.times) && (this.timesQuantifier == TIMES.NO_MORE_THAN);
+    return (((this.calledTimes <= this.times) && (this.timesQuantifier == TIMES.NO_MORE_THAN)) 
+      || ((this.calledTimes >= this.times) && (this.timesQuantifier == TIMES.AT_LEAST)));
   }
 
   Expectation.prototype.isExpectedMore = function() {
     return (this.calledTimes < this.times)
-      || ((this.calledTimes == this.times) && (this.timesQuantifier == TIMES.AT_LEAST));
+      || ((this.calledTimes >= this.times) && (this.timesQuantifier == TIMES.AT_LEAST));
   };
 
   Expectation.prototype.raiseWrongMethodNameProvided = function(mock, methodName) {
@@ -82,9 +88,9 @@
       + host.SimpleMocks.Util.unmetExpectationsMessage(mock));
   };
 
-  Expectation.prototype.match = function(mock, methodName, args) {
+  Expectation.prototype.match = function(mock, hasNextExpectation, methodName, args) {
     var self = this;
-    var canSkipCheck = this.canSkipCheck();
+    var canSkipCheck = this.canSkipCheck() && hasNextExpectation;
     var matched = true;
 
     if (methodName != this.methodName) {
@@ -150,6 +156,10 @@
     return this;
   };
 
+  Expectations.prototype.anyTimes = function(times) {
+    return this.timesAtLeast(0);
+  };
+
   Expectations.prototype.timesAtLeast = function(times) {
     checkCurrentExpectation(this, "timesAtLeast");
     this.currentExpectation.expectTimes(times, TIMES.AT_LEAST);
@@ -187,12 +197,14 @@
 
     var currentExpectation = expectations[0];
 
-    var matched = currentExpectation.match(mock, methodName, methodArgs);
+    var hasNextExpectation = expectations.length > 1;
+    var matched = currentExpectation.match(mock, hasNextExpectation, methodName, methodArgs);
 
     while (!matched) {
       expectations.shift();
       currentExpectation = expectations[0];
-      matched = currentExpectation.match(mock, methodName, methodArgs);
+      hasNextExpectation = expectations.length > 1;
+      matched = currentExpectation.match(mock, hasNextExpectation, methodName, methodArgs);
     }
 
     if (!currentExpectation.isExpectedMore()) {
