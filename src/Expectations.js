@@ -38,6 +38,11 @@
     return this;
   };
 
+  Expectation.prototype.andReturn = function(returnValue) {
+    this.returnValue = returnValue;
+    return this;
+  };
+
   Expectation.prototype.reset = function() {
     this.calledTimes = 0;
   };
@@ -56,6 +61,9 @@
         message = message + ", any times";
       }
       message = message + ", called " + this.calledTimes + " time(s)"
+    }
+    if (this.returnValue) {
+      message = message + ", return value '" + this.returnValue + "'";
     }
     return message;
   };
@@ -175,6 +183,12 @@
   Expectations.prototype.with = function() {
     checkCurrentExpectation(this, "with");
     this.currentExpectation.expectArguments([].slice.call(arguments, 0));
+    return this;
+  };
+
+  Expectations.prototype.andReturn = function(returnValue) {
+    checkCurrentExpectation(this, "andReturn");
+    this.currentExpectation.andReturn(returnValue);
     return this;
   };
 

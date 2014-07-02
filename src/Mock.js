@@ -25,7 +25,7 @@
       if (expectation.args) {
         expectationCopy.expectArguments(expectation.args);
       }
-      //TODO: returnValue
+      expectationCopy.andReturn(expectation.returnValue);
       //TODO: andThrows
       return expectationCopy;
     });

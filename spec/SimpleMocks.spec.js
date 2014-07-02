@@ -1059,14 +1059,84 @@ describe("SimpleMocks", function() {
     });
   });
 
-  //TODO: Mocking and expecting that a method returns value 'andReturn'
-  //TODO: anyTimes expectation returns some value, but unexpected method immediately called, 'undefined'
+  describe("andReturn", function() {
 
-  //TODO: andThrow
-  //Expecting an exception to be thrown andThrow
+    describe("expected method is called", function() {
+
+      it("should return specified value", function() {
+        mock = expectations.expect("add").with(1, 2).andReturn(3)
+          .mock();
+
+        expect(mock.add(1, 2)).toBe(3);
+      });
+
+      it("should return undefined in case 'andReturn' was not specified", function() {
+        mock = expectations.expect("add").with(1, 2)
+          .mock();
+
+        expect(mock.add(1, 2)).toBeUndefined();
+      });
+
+      describe("no current expectation defined", function() {
+
+        it("should raise error", function() {
+          try {
+            expectations.andReturn(2);
+          } catch (e) {
+            expect(e.message).toBe("No matching 'expect' found for last 'andReturn'");
+          }
+        });
+      });
+
+      describe("several expected methods", function() {
+
+        it("should return specified values", function() {
+          mock = expectations
+            .expect("add").with(1, 2).andReturn(3)
+            .expect("add").with(2, 3).andReturn(5)
+            .expect("sub").with(11, 5).andReturn(6)
+            .mock();
+
+          expect(mock.add(1, 2)).toBe(3);
+          expect(mock.add(2, 3)).toBe(5);
+          expect(mock.sub(11, 5)).toBe(6);
+        });
+
+        it("should work properly with 'anyTimes'", function() {
+          mock = expectations
+            .expect("add").with(1, 2).anyTimes().andReturn(3)
+            .expect("add").with(3, 4).andReturn(7)
+            .mock();
+
+          mock.add(1, 2);
+          mock.add(1, 2);
+          mock.add(1, 2);
+          expect(mock.add(3, 4)).toBe(7);
+        });
+      });
+    });
+
+    it("should throw error in case unexpected method is called", function() {
+      mock = expectations
+        .expect("add").with(1, 2).andReturn(3)
+        .mock();
+
+      try {
+        mock.add(3, 4);
+        throw new Error("Exception should be thrown when calling method with other arguments");
+      } catch (e) {
+        expect(e.message).toBe("Wrong arguments provided to 'add', expected '1,2' but was '3,4'. Unmet expectations: "
+          + "\nmethod 'add' with arguments '1,2', return value '3'");
+      }
+    });
+  });
 
   //TODO: andCall
   //Calling a specified function when method is called
+
+  //TODO: andThrow
+  //Expecting an exception to be thrown andThrow
+  //-- Cancels out andReturn and andCall
 
   //TODO: specify a changing behavior for a method
   //expect(mock.voteForRemoval("Document"))
@@ -1075,4 +1145,5 @@ describe("SimpleMocks", function() {
   //    .andReturn((byte) -42);
 
   //TODO: Mock throws an error, but then could still call 'replay' and behave normally
+  //TODO: Ability to mock separate methods on objects
 });
