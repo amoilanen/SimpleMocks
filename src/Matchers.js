@@ -10,7 +10,7 @@
   ValueMatcher.prototype = new Matcher();
 
   ValueMatcher.prototype.matches = function(value) {
-    return JSON.stringify(this.value) == JSON.stringify(value);
+    return JSON.stringify(this.value) === JSON.stringify(value);
   };
 
   ValueMatcher.prototype.toString = function() {
@@ -29,7 +29,7 @@
   TypeMatcher.prototype = new Matcher();
 
   TypeMatcher.prototype.matches = function(value) {
-    return this.type == typeof(value);
+    return this.type === typeof(value);
   };
 
   TypeMatcher.prototype.toString = function() {

@@ -53,14 +53,13 @@
     if (this.argumentMatchers) {
       message = message + " with arguments '" + this.argumentMatchers + "'";
     }
-    if (this.times > 1 || (this.timesQuantifier == TIMES.AT_LEAST)) {
+    if (this.times > 1 || (this.timesQuantifier === TIMES.AT_LEAST)) {
       if (this.times >= 1) {
-        message = message + ", " + this.timesQuantifier + " "
-          + this.times + " time(s)";
+        message = message + ", " + this.timesQuantifier + " " + this.times + " time(s)";
       } else {
         message = message + ", any times";
       }
-      message = message + ", called " + this.calledTimes + " time(s)"
+      message = message + ", called " + this.calledTimes + " time(s)";
     }
     if (this.returnValue) {
       message = message + ", return value '" + this.returnValue + "'";
@@ -69,31 +68,32 @@
   };
 
   Expectation.prototype.canSkipCheck = function() {
-    var reachedAtLeastLimit = (this.timesQuantifier == TIMES.AT_LEAST) && (this.calledTimes >= this.times);
-    var didNotReachNoMoreThanLimit = (this.timesQuantifier == TIMES.NO_MORE_THAN) && (this.calledTimes < this.times);
+    var reachedAtLeastLimit = (this.timesQuantifier === TIMES.AT_LEAST) && (this.calledTimes >= this.times);
+    var didNotReachNoMoreThanLimit = (this.timesQuantifier === TIMES.NO_MORE_THAN) && (this.calledTimes < this.times);
 
     return reachedAtLeastLimit || didNotReachNoMoreThanLimit;
   };
 
   Expectation.prototype.canBeOmitted = function() {
-    return (((this.calledTimes <= this.times) && (this.timesQuantifier == TIMES.NO_MORE_THAN)) 
-      || ((this.calledTimes >= this.times) && (this.timesQuantifier == TIMES.AT_LEAST)));
-  }
+    return (((this.calledTimes <= this.times) && (this.timesQuantifier === TIMES.NO_MORE_THAN)) || 
+      ((this.calledTimes >= this.times) && (this.timesQuantifier === TIMES.AT_LEAST)));
+  };
 
   Expectation.prototype.isExpectedMore = function() {
-    return (this.calledTimes < this.times)
-      || ((this.calledTimes >= this.times) && (this.timesQuantifier == TIMES.AT_LEAST));
+    return (this.calledTimes < this.times) || 
+      ((this.calledTimes >= this.times) && (this.timesQuantifier === TIMES.AT_LEAST));
   };
 
   Expectation.prototype.raiseWrongMethodNameProvided = function(mock, methodName) {
-    host.SimpleMocks.Util.raiseMockError(mock, "Expected method '" + this.methodName
-      + "' but method '" + methodName + "' was called. " + host.SimpleMocks.Util.unmetExpectationsMessage(mock));
+    host.SimpleMocks.Util.raiseMockError(mock, "Expected method '" + this.methodName +
+      "' but method '" + methodName + "' was called. " + 
+      host.SimpleMocks.Util.unmetExpectationsMessage(mock));
   };
 
   Expectation.prototype.raiseWrongArgumentsProvided = function(mock, methodName, args) {
-    host.SimpleMocks.Util.raiseMockError(mock, "Wrong arguments provided to '" + methodName + "', "
-      + "expected '" + this.argumentMatchers + "' but was '" + arrayToString(args) + "'. " 
-      + host.SimpleMocks.Util.unmetExpectationsMessage(mock));
+    host.SimpleMocks.Util.raiseMockError(mock, "Wrong arguments provided to '" + methodName + "', " +
+      "expected '" + this.argumentMatchers + "' but was '" + arrayToString(args) + "'. "  +
+      host.SimpleMocks.Util.unmetExpectationsMessage(mock));
   };
 
   Expectation.prototype.match = function(mock, hasNextExpectation, methodName, args) {
@@ -101,7 +101,7 @@
     var canSkipCheck = this.canSkipCheck() && hasNextExpectation;
     var matched = true;
 
-    if (methodName != this.methodName) {
+    if (methodName !== this.methodName) {
       if (!canSkipCheck) {
         this.raiseWrongMethodNameProvided(mock, methodName);
       } else {
@@ -110,7 +110,7 @@
     }
 
     if (this.argumentMatchers) {
-      if (this.argumentMatchers.length != args.length) {
+      if (this.argumentMatchers.length !== args.length) {
         if (!canSkipCheck) {
           this.raiseWrongArgumentsProvided(mock, methodName, args);
         } else {
@@ -149,7 +149,7 @@
       this.expectations.push(this.currentExpectation);
       this.currentExpectation = null;
     }
-  }
+  };
 
   Expectations.prototype.expect = function(methodName) {
     this.flush();
@@ -204,9 +204,9 @@
   Expectations.checkMethodCalled = function(mock, methodName, methodArgs) {
     var expectations = mock.beingReplayed;
 
-    if (expectations.length == 0) {
-      throw new Error("Unexpected method invokation '" + methodName + "'. "
-        + host.SimpleMocks.Util.unmetExpectationsMessage(mock));
+    if (expectations.length === 0) {
+      throw new Error("Unexpected method invokation '" + methodName + "'. " + 
+        host.SimpleMocks.Util.unmetExpectationsMessage(mock));
     }
 
     var currentExpectation = expectations[0];
